@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraktale Lernen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background: #0078d7;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        main {
+            padding: 2rem;
+        }
+        canvas {
+            display: block;
+            margin: 2rem auto;
+            border: 1px solid #333;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            background: #333;
+            color: white;
+            margin-top: 2rem;
+        }
+        .info {
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Fraktale Lernen</h1>
+        <p>Entdecke die faszinierende Welt der Fraktale!</p>
+    </header>
+    <main>
+        <section class="info">
+            <h2>Was sind Fraktale?</h2>
+            <p>Fraktale sind geometrische Muster, die sich bei jeder Vergrößerung wiederholen. Sie werden in der Mathematik, Kunst und Natur gefunden.</p>
+            <p>Ein bekanntes Beispiel ist die Mandelbrot-Menge, die du unten interaktiv erkunden kannst.</p>
+        </section>
+        <section>
+            <h2>Interaktives Mandelbrot-Fraktal</h2>
+            <canvas id="fractalCanvas" width="800" height="600"></canvas>
+            <p style="text-align: center;">Zoome mit dem Mausrad, um das Fraktal zu erkunden!</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; Von Thomas P. erstellt</p>
+    </footer>
+    <script>
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let zoom = 200; // Start-Zoom
+        let offsetX = -2.5; // Start-X-Offset
+        let offsetY = -1.5; // Start-Y-Offset
+        const maxIter = 100; // Feste maximale Iterationen
+
+        function drawFractal() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas löschen
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const samplingRate = 2; // Berechnung nur für jeden zweiten Pixel
+            for (let x = 0; x < width; x += samplingRate) {
+                for (let y = 0; y < height; y += samplingRate) {
+                    let zx = 0, zy = 0;
+                    const cx = x / zoom + offsetX;
+                    const cy = y / zoom + offsetY;
+                    let iter = 0;
+
+                    while (zx * zx + zy * zy < 4 && iter < maxIter) {
+                        const tmp = zx * zx - zy * zy + cx;
+                        zy = 2 * zx * zy + cy;
+                        zx = tmp;
+                        iter++;
+                    }
+
+                    const color = iter === maxIter ? 0 : (iter / maxIter) * 255;
+                    ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+                    ctx.fillRect(x, y, samplingRate, samplingRate); // Zeichne ein Rechteck statt eines einzelnen Pixels
+                }
+            }
+        }
+
+        canvas.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            const zoomFactor = event.deltaY > 0 ? 1.1 : 0.9;
+
+            // Berechne die Mausposition relativ zur aktuellen Ansicht
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (event.clientX - rect.left) / zoom + offsetX;
+            const mouseY = (event.clientY - rect.top) / zoom + offsetY;
+
+            // Aktualisiere den Zoom
+            zoom *= zoomFactor;
+
+            // Passe die Offsets an, um den Zoom auf die Mausposition zu zentrieren
+            offsetX = mouseX - (event.clientX - rect.left) / zoom;
+            offsetY = mouseY - (event.clientY - rect.top) / zoom;
+
+            drawFractal();
+        });
+
+        drawFractal();
+    </script>
+</body>
+</html>
