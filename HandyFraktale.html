@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraktale Lernen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background: #0078d7;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        main {
+            padding: 2rem;
+        }
+        canvas {
+            display: block;
+            margin: 2rem auto;
+            border: 1px solid #333;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            background: #333;
+            color: white;
+            margin-top: 2rem;
+        }
+        .info {
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Fraktale Lernen</h1>
+        <p>Entdecke die faszinierende Welt der Fraktale!</p>
+    </header>
+    <main>
+        <section class="info">
+            <h2>Was sind Fraktale?</h2>
+            <p>Fraktale sind geometrische Muster, die sich bei jeder Vergrößerung wiederholen. Sie werden in der Mathematik, Kunst und Natur gefunden.</p>
+            <p>Ein bekanntes Beispiel ist die Mandelbrot-Menge, die du unten interaktiv erkunden kannst.</p>
+        </section>
+        <section>
+            <h2>Interaktives Mandelbrot-Fraktal</h2>
+            <canvas id="fractalCanvas"></canvas>
+            <p style="text-align: center;">Zoome mit zwei Fingern (Pinch-to-Zoom), um das Fraktal zu erkunden!</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; Von Thomas P. erstellt</p>
+    </footer>
+    <script>
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let zoom = 200; // Start-Zoom
+        let offsetX = -2.5; // Start-X-Offset
+        let offsetY = -1.5; // Start-Y-Offset
+        const maxIter = 50; // Reduzierte Iterationen für mobile Geräte
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9; // 90% der Bildschirmbreite
+            canvas.height = window.innerHeight * 0.6; // 60% der Bildschirmhöhe
+            drawFractal(); // Fraktal neu zeichnen
+        }
+
+        function drawFractal() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas löschen
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const samplingRate = 3; // Berechnung nur für jeden dritten Pixel
+            for (let x = 0; x < width; x += samplingRate) {
+                for (let y = 0; y < height; y += samplingRate) {
+                    let zx = 0, zy = 0;
+                    const cx = x / zoom + offsetX;
+                    const cy = y / zoom + offsetY;
+                    let iter = 0;
+
+                    while (zx * zx + zy * zy < 4 && iter < maxIter) {
+                        const tmp = zx * zx - zy * zy + cx;
+                        zy = 2 * zx * zy + cy;
+                        zx = tmp;
+                        iter++;
+                    }
+
+                    const color = iter === maxIter ? 0 : (iter / maxIter) * 255;
+                    ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+                    ctx.fillRect(x, y, samplingRate, samplingRate); // Zeichne ein Rechteck statt eines einzelnen Pixels
+                }
+            }
+        }
+
+        let lastTouchDistance = null;
+
+        canvas.addEventListener('touchmove', (event) => {
+            if (event.touches.length === 2) {
+                event.preventDefault();
+
+                const touch1 = event.touches[0];
+                const touch2 = event.touches[1];
+                const currentDistance = Math.sqrt(
+                    Math.pow(touch2.clientX - touch1.clientX, 2) +
+                    Math.pow(touch2.clientY - touch1.clientY, 2)
+                );
+
+                if (lastTouchDistance) {
+                    const zoomFactor = currentDistance > lastTouchDistance ? 0.9 : 1.1;
+
+                    const rect = canvas.getBoundingClientRect();
+                    const centerX = (touch1.clientX + touch2.clientX) / 2 - rect.left;
+                    const centerY = (touch1.clientY + touch2.clientY) / 2 - rect.top;
+
+                    const mouseX = centerX / zoom + offsetX;
+                    const mouseY = centerY / zoom + offsetY;
+
+                    zoom *= zoomFactor;
+
+                    offsetX = mouseX - centerX / zoom;
+                    offsetY = mouseY - centerY / zoom;
+
+                    drawFractal();
+                }
+
+                lastTouchDistance = currentDistance;
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            lastTouchDistance = null;
+        });
+
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+
+        drawFractal();
+    </script>
+</body>
+</html>
